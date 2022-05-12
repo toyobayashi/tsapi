@@ -96,18 +96,13 @@ export interface PluginConfig {
   [options: string]: any
 }
 
-declare module 'typescript' {
-  export interface CompilerOptions {
-    plugins: PluginConfig[]
-  }
-}
-
 export function getTransformers (tsconfig: string, compilerOptions: ts.CompilerOptions, program: ts.Program): ts.CustomTransformers {
   const _require = createRequire(resolve(tsconfig))
   const customTransformers: ts.CustomTransformers = {}
   if (Array.isArray(compilerOptions.plugins)) {
-    for (let i = 0; i < compilerOptions.plugins.length; ++i) {
-      let plugin = compilerOptions.plugins[i]
+    const plugins = compilerOptions.plugins as any as Array<PluginConfig | string>
+    for (let i = 0; i < plugins.length; ++i) {
+      let plugin = plugins[i]
       if (typeof plugin === 'string') plugin = { transform: plugin }
       const { transform, type, after, afterDeclarations, ...config } = plugin
       delete config.import

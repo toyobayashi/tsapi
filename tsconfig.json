@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "lib",
     "target": "ES2019",
     "module": "CommonJS",
     "noImplicitAny": true,
