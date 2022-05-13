@@ -1,7 +1,7 @@
 {
   "name": "@tybys/tsapi",
   "version": "0.1.0",
-  "description": "",
+  "description": "Building typescript project by programming way.",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "peerDependencies": {
@@ -15,7 +15,8 @@
     "eslint-config-standard-with-typescript": "^21.0.1",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.0.0"
+    "eslint-plugin-promise": "^6.0.0",
+    "typescript": ">= 4.0.0"
   },
   "scripts": {
     "build": "tsc",
