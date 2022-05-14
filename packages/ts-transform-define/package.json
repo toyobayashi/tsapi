@@ -1,0 +1,39 @@
+{
+  "name": "@tybys/ts-transform-define",
+  "version": "0.1.0",
+  "description": "",
+  "main": "./lib/index.js",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    }
+  },
+  "typings": "./lib/index.d.ts",
+  "peerDependencies": {
+    "typescript": ">= 4.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node ./test/build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toyobayashi/tsapi.git"
+  },
+  "keywords": [],
+  "author": "toyobayashi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/toyobayashi/tsapi/issues"
+  },
+  "homepage": "https://github.com/toyobayashi/tsapi/tree/main/packages/ts-transform-define#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "is-plain-object": "^5.0.0"
+  }
+}

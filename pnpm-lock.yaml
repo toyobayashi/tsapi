@@ -1,6 +1,7 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@tybys/ts-transform-define': workspace:*
   '@tybys/ts-transform-pure-class': workspace:*
   '@tybys/tsapi': workspace:*
   '@types/node': ^16.11.21
@@ -14,6 +15,7 @@ specifiers:
   typescript: '>= 4.0.0'
 
 devDependencies:
+  '@tybys/ts-transform-define': link:packages/ts-transform-define
   '@tybys/ts-transform-pure-class': link:packages/ts-transform-pure-class
   '@tybys/tsapi': link:packages/tsapi
   '@types/node': 16.11.35

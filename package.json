@@ -2,6 +2,7 @@
   "private": true,
   "devDependencies": {
     "@tybys/tsapi": "workspace:*",
+    "@tybys/ts-transform-define": "workspace:*",
     "@tybys/ts-transform-pure-class": "workspace:*",
     "@types/node": "^16.11.21",
     "@typescript-eslint/eslint-plugin": "^5.22.0",

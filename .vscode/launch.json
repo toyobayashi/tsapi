@@ -1,0 +1,10 @@
+{
+  "configurations": [
+    {
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/packages/ts-transform-define/test/build.js",
+      "request": "launch",
+      "type": "node"
+    }
+  ]
+}

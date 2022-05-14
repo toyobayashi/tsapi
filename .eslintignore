@@ -1,4 +1,4 @@
 node_modules
 .eslintrc.js
 /packages/*/lib
-/packages/ts-transform-pure-class/test
+/packages/*/test
