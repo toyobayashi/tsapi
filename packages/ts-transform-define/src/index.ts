@@ -14,7 +14,7 @@ import type {
 
 import * as ts from 'typescript'
 
-import { runInNewContext } from 'vm'
+import * as vm from 'vm'
 
 import { isPlainObject } from 'is-plain-object'
 
@@ -112,7 +112,7 @@ function toTypeof (value: any, factory: NodeFactory, stringIsCode: boolean): Str
       return factory.createStringLiteral('number')
     }
     try {
-      return factory.createStringLiteral(typeof runInNewContext(value))
+      return factory.createStringLiteral(typeof vm.runInNewContext(value))
     } catch (_) {
       return undefined
     }

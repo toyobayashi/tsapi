@@ -1,6 +1,6 @@
 {
   "name": "@tybys/tsapi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Building typescript project by programming way.",
   "main": "./lib/index.js",
   "type": "commonjs",

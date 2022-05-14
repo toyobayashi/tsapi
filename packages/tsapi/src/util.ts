@@ -96,9 +96,8 @@ export interface PluginConfig {
   [options: string]: any
 }
 
-export function getTransformers (tsconfig: string, compilerOptions: ts.CompilerOptions, program: ts.Program): ts.CustomTransformers {
+export function getTransformers (customTransformers: ts.CustomTransformers, tsconfig: string, compilerOptions: ts.CompilerOptions, program: ts.Program): void {
   const _require = createRequire(resolve(tsconfig))
-  const customTransformers: ts.CustomTransformers = {}
   if (Array.isArray(compilerOptions.plugins)) {
     const plugins = compilerOptions.plugins as any as Array<PluginConfig | string>
     for (let i = 0; i < plugins.length; ++i) {
@@ -115,5 +114,4 @@ export function getTransformers (tsconfig: string, compilerOptions: ts.CompilerO
       )
     }
   }
-  return customTransformers
 }

@@ -4,34 +4,27 @@ import type {
   Visitor
 } from 'typescript'
 
-import {
-  isParenthesizedExpression,
-  isCallExpression,
-  isPartiallyEmittedExpression,
-  getSyntheticLeadingComments,
-  // setSyntheticLeadingComments,
-  visitEachChild
-} from 'typescript'
+import * as ts from 'typescript'
 
 const transformerFactory: TransformerFactory<SourceFile> = (context) => {
   const visitor: Visitor = (node) => {
     if (
-      isParenthesizedExpression(node) &&
-      isCallExpression(node.expression) &&
-      isPartiallyEmittedExpression(node.expression.expression)
+      ts.isParenthesizedExpression(node) &&
+      ts.isCallExpression(node.expression) &&
+      ts.isPartiallyEmittedExpression(node.expression.expression)
     ) {
-      const leadingComments = getSyntheticLeadingComments(node)
+      const leadingComments = ts.getSyntheticLeadingComments(node)
       if (leadingComments && leadingComments.length === 1 && leadingComments[0].text === '* @class ') {
         leadingComments[0].text = '#__PURE__'
-        // setSyntheticLeadingComments(node, leadingComments)
+        // ts.setSyntheticLeadingComments(node, leadingComments)
       }
     }
-    return visitEachChild(node, visitor, context)
+    return ts.visitEachChild(node, visitor, context)
   }
 
   return (src) => {
     if (src.isDeclarationFile) return src
-    return visitEachChild(src, visitor, context)
+    return ts.visitEachChild(src, visitor, context)
   }
 }
 
