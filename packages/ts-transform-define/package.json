@@ -17,6 +17,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepare": "npm run build",
     "test": "node ./test/build.js"
   },
   "repository": {
