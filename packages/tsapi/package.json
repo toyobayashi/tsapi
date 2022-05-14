@@ -1,0 +1,35 @@
+{
+  "name": "@tybys/tsapi",
+  "version": "0.1.0",
+  "description": "Building typescript project by programming way.",
+  "main": "./lib/index.js",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    }
+  },
+  "typings": "./lib/index.d.ts",
+  "peerDependencies": {
+    "typescript": ">= 4.0.0"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toyobayashi/tsapi.git"
+  },
+  "keywords": [],
+  "author": "toyobayashi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/toyobayashi/tsapi/issues"
+  },
+  "homepage": "https://github.com/toyobayashi/tsapi#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

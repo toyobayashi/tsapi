@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "ESNext",
+    "outDir": "./out",
+    "plugins": [
+      { "transform": "..", "type": "raw", "after": true }
+    ]
+  },
+  "include": [
+    "./index.ts"
+  ]
+}

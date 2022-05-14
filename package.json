@@ -1,13 +1,8 @@
 {
-  "name": "@tybys/tsapi",
-  "version": "0.1.0",
-  "description": "Building typescript project by programming way.",
-  "main": "./lib/index.js",
-  "typings": "./lib/index.d.ts",
-  "peerDependencies": {
-    "typescript": ">= 4.0.0"
-  },
+  "private": true,
   "devDependencies": {
+    "@tybys/tsapi": "workspace:*",
+    "@tybys/ts-transform-pure-class": "workspace:*",
     "@types/node": "^16.11.21",
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
@@ -19,21 +14,6 @@
     "typescript": ">= 4.0.0"
   },
   "scripts": {
-    "build": "tsc",
-    "prepare": "npm run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/toyobayashi/tsapi.git"
-  },
-  "keywords": [],
-  "author": "toyobayashi",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/toyobayashi/tsapi/issues"
-  },
-  "homepage": "https://github.com/toyobayashi/tsapi#readme",
-  "publishConfig": {
-    "access": "public"
+    "build": "tsc -p ./packages/tsapi/tsconfig.json && tsc -p ./packages/ts-transform-pure-class/tsconfig.json"
   }
 }
