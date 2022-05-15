@@ -4,29 +4,9 @@
     "module": "ESNext",
     "outDir": "./out",
     "plugins": [
-      {
-        "transform": "@tybys/ts-transform-define",
-        "evaluateTypeof": true,
-        "defines": {
-          "TEST": {
-            "a": 1,
-            "b": null,
-            "c": "\"string\"",
-            "d": true,
-            "e": ["\"aaa\"", 2, false]
-          },
-          "process.env": {
-            "NODE_ENV": "'development'"
-          },
-          "NULL": 0,
-          "predefinedNestedObject": {
-            "array": [{ "value": 0 }]
-          }
-        }
-      }
     ]
   },
   "include": [
-    "./index.ts"
+    "./define.test.ts"
   ]
 }

@@ -9,6 +9,8 @@ import type {
   ObjectLiteralElementLike,
   PropertyAccessExpression,
   Expression,
+  Node,
+  ParenthesizedExpression,
   StringLiteral
 } from 'typescript'
 
@@ -31,18 +33,22 @@ function isVar (node: Identifier): boolean {
 
 export interface DefineOptions {
   defines?: Record<string, any>
-  evaluateTypeof?: boolean
 }
 
-type CheckResult = {
+type CheckResultFalse = {
   result: false
-} | {
-  result: true
-  value: any
 }
+
+type CheckResultTrue<T = any> = {
+  result: true
+  value: T
+}
+
+type CheckResult = CheckResultFalse | CheckResultTrue
 
 function canReplaceIdentifier (node: Identifier, typeChecker: TypeChecker, defines: Record<string, any>, defineKeys: string[]): CheckResult {
   const result = Boolean(node.text) && defineKeys.includes(node.text) &&
+    !ts.isPropertyAccessExpression(node.parent)
     !isVar(node) &&
     !hasValueSymbol(node, typeChecker)
   if (result) {
@@ -51,11 +57,24 @@ function canReplaceIdentifier (node: Identifier, typeChecker: TypeChecker, defin
   return { result }
 }
 
+function isValidPropertyAccessExpression (node: PropertyAccessExpression): boolean {
+  if (!ts.isIdentifier(node.name)) return false
+  if (ts.isPropertyAccessExpression(node.expression)) {
+    return isValidPropertyAccessExpression(node.expression)
+  }
+  return ts.isIdentifier(node.expression)
+}
+
 function canReplacePropertyAccessExpression (node: PropertyAccessExpression, typeChecker: TypeChecker, defines: Record<string, any>): CheckResult {
   const symbol = typeChecker.getSymbolAtLocation(node)
   if (symbol?.valueDeclaration && !ts.isPropertySignature(symbol.valueDeclaration)) {
     return { result: false }
   }
+
+  if (!isValidPropertyAccessExpression(node)) {
+    return { result: false }
+  }
+
   const access = node.getText().split('.')
   let p = defines
   for (let i = 0; i < access.length; ++i) {
@@ -130,6 +149,15 @@ function toExpression (value: any, factory: NodeFactory, stringIsCode: boolean):
     return factory.createIdentifier('NaN')
   }
   if (typeof value === 'number') {
+    if (value === 0) {
+      if (1 / value > 0) {
+        return factory.createNumericLiteral('+0')
+      }
+      if (1 / value < 0) {
+        return factory.createNumericLiteral('-0')
+      }
+      factory.createNumericLiteral(0)
+    }
     return factory.createNumericLiteral(value)
   }
   if (typeof value === 'boolean') {
@@ -169,6 +197,7 @@ function toExpression (value: any, factory: NodeFactory, stringIsCode: boolean):
       undefined,
       [factory.createArrayLiteralExpression(elements, false)]
     )
+    // return factory.createArrayLiteralExpression(elements, false)
   }
   if (value instanceof Date) {
     return factory.createParenthesizedExpression(factory.createNewExpression(
@@ -197,6 +226,7 @@ function toExpression (value: any, factory: NodeFactory, stringIsCode: boolean):
       undefined,
       [factory.createObjectLiteralExpression(properties, false)]
     )
+    // return factory.createObjectLiteralExpression(properties, false)
   }
   return undefined
 }
@@ -227,9 +257,37 @@ function resolveDefines (defines: any): any {
   return res
 }
 
+function tryApply<R extends Node> (
+  node: Node,
+  typeChecker: TypeChecker,
+  defines: Record<string, any>,
+  defineKeys: string[],
+  replacer: (check: CheckResult) => R | undefined
+): R | undefined {
+  if (ts.isParenthesizedExpression(node)) {
+    let exp: Node = node
+    do {
+      exp = (exp as ParenthesizedExpression).expression
+    } while (exp && ts.isParenthesizedExpression(exp))
+    return tryApply(exp, typeChecker, defines, defineKeys, replacer)
+  }
+
+  // obj.prop1.prop2
+  if (ts.isPropertyAccessExpression(node)) {
+    const check = canReplacePropertyAccessExpression(node, typeChecker, defines)
+    return replacer(check)
+  }
+
+  if (ts.isIdentifier(node)) {
+    const check = canReplaceIdentifier(node, typeChecker, defines, defineKeys)
+    return replacer(check)
+  }
+
+  return undefined
+}
+
 function defineTransformer (program: Program, config: DefineOptions): TransformerFactory<SourceFile> {
   const defines = resolveDefines(config.defines ?? {})
-  const evaluateTypeof = Boolean(config.evaluateTypeof)
   const defineKeys = Object.keys(defines)
   const typeChecker = program.getTypeChecker()
   return (context) => {
@@ -267,59 +325,33 @@ function defineTransformer (program: Program, config: DefineOptions): Transforme
       // expression(...arguments)
       if (ts.isCallExpression(node)) {
         return factory.createCallExpression(
-          node.expression,
+          tryApply(
+            node.expression, typeChecker, defines, defineKeys,
+            (check) => (
+              check.result && typeof check.value === 'function'
+                ? toExpression(check.value, factory, true)!
+                : undefined
+            )
+          ) ?? ts.visitNode(node.expression, visitor),
           node.typeArguments,
           node.arguments.map(e => ts.visitNode(e, visitor))
         )
       }
 
       // typeof (identifier)
-      if (evaluateTypeof && ts.isTypeOfExpression(node)) {
-        let exp: Expression = node.expression
-        while (ts.isParenthesizedExpression(exp)) {
-          exp = exp.expression
-        }
-
-        if (ts.isPropertyAccessExpression(exp)) {
-          const check = canReplacePropertyAccessExpression(exp, typeChecker, defines)
-          if (check.result) {
-            return toTypeof(check.value, factory, true) ?? exp
-          }
-          return exp
-        }
-
-        if (ts.isIdentifier(exp)) {
-          const check = canReplaceIdentifier(exp, typeChecker, defines, defineKeys)
-          if (check.result) {
-            return toTypeof(check.value, factory, true) ?? exp
-          }
-          return exp
-        }
-
-        return ts.visitEachChild(node, visitor, context)
+      if (ts.isTypeOfExpression(node)) {
+        return tryApply(
+          node.expression, typeChecker, defines, defineKeys,
+          (check) => check.result ? toTypeof(check.value, factory, true) : undefined
+        ) ?? ts.visitEachChild(node, visitor, context)
       }
 
-      // obj.prop1.prop2
-      if (ts.isPropertyAccessExpression(node)) {
-        const check = canReplacePropertyAccessExpression(node, typeChecker, defines)
-        if (check.result) {
-          const exp = toExpression(check.value, factory, true)
-          return exp ?? node
-        }
-        return node
-      }
-
-      if (ts.isIdentifier(node)) {
-        const check = canReplaceIdentifier(node, typeChecker, defines, defineKeys)
-        if (check.result) {
-          const exp = toExpression(check.value, factory, true)
-          return exp ?? node
-        }
-        return node
-      }
-
-      return ts.visitEachChild(node, visitor, context)
+      return tryApply(
+        node, typeChecker, defines, defineKeys,
+        (check) => check.result ? toExpression(check.value, factory, true) : undefined
+      ) ?? ts.visitEachChild(node, visitor, context)
     }
+
     return (src) => {
       if (src.isDeclarationFile) return src
       return ts.visitEachChild(src, visitor, context)

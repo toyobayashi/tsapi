@@ -17,7 +17,6 @@ npm install -D @tybys/ts-transform-define
     "plugins": [
       {
         "transform": "@tybys/ts-transform-define",
-        "evaluateTypeof": true,
         "defines": {
           "process.env": {
             "NODE_ENV": "'development'"
