@@ -37,18 +37,20 @@ export interface DefineOptions {
 
 type CheckResultFalse = {
   result: false
+  stop?: boolean
 }
 
 type CheckResultTrue<T = any> = {
   result: true
   value: T
+  stop?: boolean
 }
 
 type CheckResult = CheckResultFalse | CheckResultTrue
 
 function canReplaceIdentifier (node: Identifier, typeChecker: TypeChecker, defines: Record<string, any>, defineKeys: string[]): CheckResult {
   const result = Boolean(node.text) && defineKeys.includes(node.text) &&
-    !ts.isPropertyAccessExpression(node.parent)
+    !(ts.isPropertyAccessExpression(node.parent) && node.parent.name === node)
     !isVar(node) &&
     !hasValueSymbol(node, typeChecker)
   if (result) {
@@ -65,23 +67,23 @@ function isValidPropertyAccessExpression (node: PropertyAccessExpression): boole
   return ts.isIdentifier(node.expression)
 }
 
-function canReplacePropertyAccessExpression (node: PropertyAccessExpression, typeChecker: TypeChecker, defines: Record<string, any>): CheckResult {
+function canReplacePropertyAccessExpression (node: PropertyAccessExpression, typeChecker: TypeChecker, defines: Record<string, any>): CheckResult {  
+  if (!isValidPropertyAccessExpression(node)) {
+    return { result: false }
+  }
+
   const symbol = typeChecker.getSymbolAtLocation(node)
   if (symbol?.valueDeclaration && !ts.isPropertySignature(symbol.valueDeclaration)) {
     return { result: false }
   }
 
-  if (!isValidPropertyAccessExpression(node)) {
-    return { result: false }
-  }
-
-  const access = node.getText().split('.')
+  const access = node.getText().split('.').map(s => s.trim())
   let p = defines
   for (let i = 0; i < access.length; ++i) {
     if (typeof p === 'object' && p !== null && Object.keys(p).includes(access[i])) {
       p = p[access[i]]
     } else {
-      return { result: false }
+      return { result: false, stop: Boolean(access.length === 3 && access[0] === 'process' && access[1] === 'env' && access[2]) }
     }
   }
   return { result: true, value: p }
@@ -330,7 +332,7 @@ function defineTransformer (program: Program, config: DefineOptions): Transforme
             (check) => (
               check.result && typeof check.value === 'function'
                 ? toExpression(check.value, factory, true)!
-                : undefined
+                : (check.stop ? node.expression : undefined)
             )
           ) ?? ts.visitNode(node.expression, visitor),
           node.typeArguments,
@@ -342,13 +344,13 @@ function defineTransformer (program: Program, config: DefineOptions): Transforme
       if (ts.isTypeOfExpression(node)) {
         return tryApply(
           node.expression, typeChecker, defines, defineKeys,
-          (check) => check.result ? toTypeof(check.value, factory, true) : undefined
+          (check) => check.result ? toTypeof(check.value, factory, true) : (check.stop ? node.expression : undefined)
         ) ?? ts.visitEachChild(node, visitor, context)
       }
 
       return tryApply(
         node, typeChecker, defines, defineKeys,
-        (check) => check.result ? toExpression(check.value, factory, true) : undefined
+        (check) => check.result ? toExpression(check.value, factory, true) : (check.stop ? node : undefined)
       ) ?? ts.visitEachChild(node, visitor, context)
     }
 

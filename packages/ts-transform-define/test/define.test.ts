@@ -223,13 +223,17 @@ it("should evaluate composed expressions (issue 5100)", function() {
 	}
 });
 
-it("should follow renamings in var (issue 5215)", function() {
-	var _process$env = process.env,
-		// TEST = _process$env.TEST,
-		DEFINED_NESTED_KEY = _process$env.DEFINED_NESTED_KEY;
-	// expect(TEST).toBe("test");
-	expect(DEFINED_NESTED_KEY).toBe(5);
-});
+// it("should follow renamings in var (issue 5215)", function() {
+// 	var _process$env = process.env,
+// 		TEST = _process$env.TEST,
+// 		DEFINED_NESTED_KEY = _process$env.DEFINED_NESTED_KEY;
+// 	expect(TEST).toBe("test");
+// 	expect(DEFINED_NESTED_KEY).toBe(5);
+// });
+
+// it("should check that runtimeValue callback argument is a module", function() {
+// 	expect(RUNTIMEVALUE_CALLBACK_ARGUMENT_IS_A_MODULE).toEqual(true);
+// });
 
 it("should expand properly", function() {
 	const a = require("./dir/a");
