@@ -194,12 +194,12 @@ function toExpression (value: any, factory: NodeFactory, stringIsCode: boolean):
         elements[i] = factory.createIdentifier('undefined')
       }
     }
-    return factory.createCallExpression(
-      factory.createIdentifier('Object'),
-      undefined,
-      [factory.createArrayLiteralExpression(elements, false)]
-    )
-    // return factory.createArrayLiteralExpression(elements, false)
+    // return factory.createCallExpression(
+    //   factory.createIdentifier('Object'),
+    //   undefined,
+    //   [factory.createArrayLiteralExpression(elements, false)]
+    // )
+    return factory.createArrayLiteralExpression(elements, false)
   }
   if (value instanceof Date) {
     return factory.createParenthesizedExpression(factory.createNewExpression(
@@ -223,12 +223,12 @@ function toExpression (value: any, factory: NodeFactory, stringIsCode: boolean):
         ))
       }
     }
-    return factory.createCallExpression(
-      factory.createIdentifier('Object'),
-      undefined,
-      [factory.createObjectLiteralExpression(properties, false)]
-    )
-    // return factory.createObjectLiteralExpression(properties, false)
+    // return factory.createCallExpression(
+    //   factory.createIdentifier('Object'),
+    //   undefined,
+    //   [factory.createObjectLiteralExpression(properties, false)]
+    // )
+    return factory.createObjectLiteralExpression(properties, false)
   }
   return undefined
 }
