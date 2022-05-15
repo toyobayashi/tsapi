@@ -152,9 +152,6 @@ function toExpression (value: any, factory: NodeFactory, stringIsCode: boolean):
   }
   if (typeof value === 'number') {
     if (value === 0) {
-      if (1 / value > 0) {
-        return factory.createNumericLiteral('+0')
-      }
       if (1 / value < 0) {
         return factory.createNumericLiteral('-0')
       }
