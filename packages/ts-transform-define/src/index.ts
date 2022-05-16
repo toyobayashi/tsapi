@@ -323,6 +323,21 @@ function defineTransformer (program: Program, config: DefineOptions): Transforme
 
       // expression(...arguments)
       if (ts.isCallExpression(node)) {
+        if (ts.isCallChain(node)) {
+          return factory.createCallChain(
+            tryApply(
+              node.expression, typeChecker, defines, defineKeys,
+              (check) => (
+                check.result && typeof check.value === 'function'
+                  ? toExpression(check.value, factory, true)!
+                  : (check.stop ? node.expression : undefined)
+              )
+            ) ?? ts.visitNode(node.expression, visitor),
+            node.questionDotToken,
+            node.typeArguments,
+            node.arguments.map(e => ts.visitNode(e, visitor))
+          )
+        }
         return factory.createCallExpression(
           tryApply(
             node.expression, typeChecker, defines, defineKeys,
