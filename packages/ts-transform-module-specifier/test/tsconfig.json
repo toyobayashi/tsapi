@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "ESNext",
+    "outDir": "./out",
+    "importHelpers": true,
+    "noEmitHelpers": true,
+    "plugins": [
+      {
+        "transform": "@tybys/ts-transform-module-specifier",
+        "type": "config",
+        "targets": [
+          {
+            "test": "^(\\./[^.]+)$",
+            "replacer": "$1.mjs"
+          },
+          {
+            "test": "^(\\./.+)(\\.[^.]+)$",
+            "replacer": "$1.mjs"
+          }
+        ]
+      },
+      {
+        "transform": "@tybys/ts-transform-module-specifier",
+        "type": "config",
+        "after": true,
+        "targets": [
+          {
+            "test": "^tslib$",
+            "replacer": "my-tslib"
+          }
+        ]
+      }
+    ]
+  },
+  "include": [
+    "./define.test.ts"
+  ]
+}
