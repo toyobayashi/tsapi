@@ -28,6 +28,7 @@ function withTransformerOption (
 export interface TransformOptions {
   ignoreErrorCodes?: number[]
   optionsToExtend?: ts.CompilerOptions
+  outputSuffix?: string
   customTransformersBefore?: (program: ts.Program) => ts.CustomTransformers
   customTransformersAfter?: (program: ts.Program) => ts.CustomTransformers
 }
@@ -37,12 +38,21 @@ export function compile (
   {
     ignoreErrorCodes = [],
     optionsToExtend,
+    outputSuffix,
     customTransformersBefore,
     customTransformersAfter,
   }: TransformOptions = {}
 ): void {
   const parsedCommandLine = parseTsConfigToCommandLine(tsconfig, optionsToExtend)
   const compilerHost = ts.createCompilerHost(parsedCommandLine.options)
+
+  if (typeof outputSuffix === 'string') {
+    const originalWriteFile = compilerHost.writeFile
+    compilerHost.writeFile = function (this: any, fileName, data, writeByteOrderMark, onError, sourceFiles) {
+      const name = fileName.endsWith('.js') ? (fileName.replace(/\.js$/, outputSuffix)) : fileName
+      originalWriteFile.call(this, name, data, writeByteOrderMark, onError, sourceFiles)
+    }
+  }
 
   const program = ts.createProgram(parsedCommandLine.fileNames, parsedCommandLine.options, compilerHost)
   const transformers = withTransformerOption(program, { customTransformersBefore, customTransformersAfter }, (transformers) => {
@@ -67,6 +77,7 @@ export function watch (
   {
     ignoreErrorCodes = [],
     optionsToExtend,
+    outputSuffix,
     customTransformersBefore,
     customTransformersAfter
   }: TransformOptions = {}
@@ -97,6 +108,15 @@ export function watch (
 
   const origCreateProgram = host.createProgram
   host.createProgram = function (rootNames, options, host, oldProgram) {
+    if (outputSuffix) {
+      if (host && host.writeFile) {
+        const originalWriteFile = host.writeFile
+        host.writeFile = function (this: any, fileName, data, writeByteOrderMark, onError, sourceFiles) {
+          const name = fileName.endsWith('.js') ? (fileName.replace(/\.js$/, outputSuffix)) : fileName
+          originalWriteFile.call(this, name, data, writeByteOrderMark, onError, sourceFiles)
+        }
+      }
+    }
     return origCreateProgram.call(this, rootNames, options, host, oldProgram)
   }
 
