@@ -27,6 +27,7 @@ function withTransformerOption (
 
 export interface TransformOptions {
   ignoreErrorCodes?: number[]
+  optionsToExtend?: ts.CompilerOptions
   customTransformersBefore?: (program: ts.Program) => ts.CustomTransformers
   customTransformersAfter?: (program: ts.Program) => ts.CustomTransformers
 }
@@ -35,11 +36,12 @@ export function compile (
   tsconfig: string,
   {
     ignoreErrorCodes = [],
+    optionsToExtend,
     customTransformersBefore,
-    customTransformersAfter
+    customTransformersAfter,
   }: TransformOptions = {}
 ): void {
-  const parsedCommandLine = parseTsConfigToCommandLine(tsconfig)
+  const parsedCommandLine = parseTsConfigToCommandLine(tsconfig, optionsToExtend)
   const compilerHost = ts.createCompilerHost(parsedCommandLine.options)
 
   const program = ts.createProgram(parsedCommandLine.fileNames, parsedCommandLine.options, compilerHost)
@@ -64,6 +66,7 @@ export function watch (
   tsconfig: string,
   {
     ignoreErrorCodes = [],
+    optionsToExtend,
     customTransformersBefore,
     customTransformersAfter
   }: TransformOptions = {}
@@ -85,7 +88,7 @@ export function watch (
 
   const host = ts.createWatchCompilerHost(
     configPath,
-    undefined,
+    optionsToExtend,
     ts.sys,
     ts.createSemanticDiagnosticsBuilderProgram,
     reportDiagnostic,

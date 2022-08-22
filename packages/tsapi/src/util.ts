@@ -14,7 +14,7 @@ export function reportDiagnostics (diagnostics: ts.Diagnostic[]): void {
   }
 }
 
-export function parseTsConfigToCommandLine (tsconfig: string): ts.ParsedCommandLine {
+export function parseTsConfigToCommandLine (tsconfig: string, optionsToExtend?: ts.CompilerOptions): ts.ParsedCommandLine {
   const configFileName = ts.findConfigFile(
     dirname(tsconfig),
     ts.sys.fileExists,
@@ -36,7 +36,7 @@ export function parseTsConfigToCommandLine (tsconfig: string): ts.ParsedCommandL
     }
   }
 
-  const parsedCommandLine = ts.getParsedCommandLineOfConfigFile(configFileName, undefined, parseConfigHost, undefined, undefined, undefined)!
+  const parsedCommandLine = ts.getParsedCommandLineOfConfigFile(configFileName, optionsToExtend, parseConfigHost, undefined, undefined, undefined)!
   if (parsedCommandLine.errors.length) {
     reportDiagnostics(parsedCommandLine.errors)
     const messageText = typeof parsedCommandLine.errors[0].messageText === 'string'

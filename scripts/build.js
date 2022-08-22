@@ -1,7 +1,8 @@
 import { execa } from 'execa'
 import path from 'path'
+import { fileURLToPath } from 'url' 
 
-const __dirname = path.dirname(import.meta.url.substring(8))
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const tsc = path.join(__dirname, '../node_modules/.bin/tsc')
 
