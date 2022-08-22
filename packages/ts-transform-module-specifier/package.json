@@ -1,6 +1,6 @@
 {
   "name": "@tybys/ts-transform-module-specifier",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "./lib/index.js",
   "type": "commonjs",
@@ -30,7 +30,7 @@
   "bugs": {
     "url": "https://github.com/toyobayashi/tsapi/issues"
   },
-  "homepage": "https://github.com/toyobayashi/tsapi/tree/main/packages/ts-transform-define#readme",
+  "homepage": "https://github.com/toyobayashi/tsapi/tree/main/packages/ts-transform-module-specifier#readme",
   "publishConfig": {
     "access": "public"
   }
