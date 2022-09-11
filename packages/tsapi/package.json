@@ -32,5 +32,8 @@
   "homepage": "https://github.com/toyobayashi/tsapi#readme",
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "commondir": "^1.0.1"
   }
 }

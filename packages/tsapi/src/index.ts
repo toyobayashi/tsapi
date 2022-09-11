@@ -2,48 +2,36 @@
 
 import { dirname, basename } from 'path'
 import * as ts from 'typescript'
-import { parseTsConfigToCommandLine, getTransformers, reportDiagnostics } from './util'
 
-function withTransformerOption (
-  program: ts.Program,
-  {
-    customTransformersBefore,
-    customTransformersAfter
-  }: TransformOptions,
-  fn: (transformers: ts.CustomTransformers) => void
-): ts.CustomTransformers {
-  const transformers = typeof customTransformersBefore === 'function'
-    ? customTransformersBefore(program)
-    : {}
-  fn(transformers)
-  if (typeof customTransformersAfter === 'function') {
-    const transformersAfter = customTransformersAfter(program)
-    transformers.before = [...(transformers.before || (transformers.before = [])), ...(transformersAfter.before || [])]
-    transformers.after = [...(transformers.after || (transformers.after = [])), ...(transformersAfter.after || [])]
-    transformers.afterDeclarations = [...(transformers.afterDeclarations || (transformers.afterDeclarations = [])), ...(transformersAfter.afterDeclarations || [])]
-  }
-  return transformers
-}
+import {
+  parseTsConfigToCommandLine,
+  getTransformers,
+  reportDiagnostics,
+  withTransformerOption
+} from './util'
 
-export interface TransformOptions {
-  ignoreErrorCodes?: number[]
-  optionsToExtend?: ts.CompilerOptions
-  outputSuffix?: string
-  customTransformersBefore?: (program: ts.Program) => ts.CustomTransformers
-  customTransformersAfter?: (program: ts.Program) => ts.CustomTransformers
-}
+import type { TransformOptions } from './types'
+import { transpile } from './transpile'
 
 export function compile (
   tsconfig: string,
-  {
+  options: TransformOptions = {}
+): void {
+  const {
+    transpileOnly = false,
     ignoreErrorCodes = [],
     optionsToExtend,
     outputSuffix,
     customTransformersBefore,
     customTransformersAfter,
-  }: TransformOptions = {}
-): void {
+  } = options
   const parsedCommandLine = parseTsConfigToCommandLine(tsconfig, optionsToExtend)
+
+  if (transpileOnly) {
+    transpile(tsconfig, parsedCommandLine, options)
+    return
+  }
+
   const compilerHost = ts.createCompilerHost(parsedCommandLine.options)
 
   if (typeof outputSuffix === 'string') {

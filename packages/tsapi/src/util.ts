@@ -2,6 +2,7 @@ import { dirname, basename, resolve } from 'path'
 import { createRequire } from 'module'
 import { TSError } from './error'
 import * as ts from 'typescript'
+import type { TransformOptions } from './types'
 
 export function reportDiagnostics (diagnostics: ts.Diagnostic[]): void {
   if (diagnostics.length) {
@@ -114,4 +115,25 @@ export function getTransformers (customTransformers: ts.CustomTransformers, tsco
       )
     }
   }
+}
+
+export function withTransformerOption (
+  program: ts.Program,
+  {
+    customTransformersBefore,
+    customTransformersAfter
+  }: TransformOptions,
+  fn: (transformers: ts.CustomTransformers) => void
+): ts.CustomTransformers {
+  const transformers = typeof customTransformersBefore === 'function'
+    ? customTransformersBefore(program)
+    : {}
+  fn(transformers)
+  if (typeof customTransformersAfter === 'function') {
+    const transformersAfter = customTransformersAfter(program)
+    transformers.before = [...(transformers.before || (transformers.before = [])), ...(transformersAfter.before || [])]
+    transformers.after = [...(transformers.after || (transformers.after = [])), ...(transformersAfter.after || [])]
+    transformers.afterDeclarations = [...(transformers.afterDeclarations || (transformers.afterDeclarations = [])), ...(transformersAfter.afterDeclarations || [])]
+  }
+  return transformers
 }
