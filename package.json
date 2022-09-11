@@ -12,17 +12,23 @@
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
     "eslint": "^8.15.0",
-    "eslint-config-standard-with-typescript": "^21.0.1",
+    "eslint-config-standard-with-typescript": "^22.0.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-n": "^15.2.5",
+    "eslint-plugin-promise": "^6.0.1",
     "execa": "^6.1.0",
     "jest": "^28.1.0",
-    "typescript": ">= 4.0.0"
+    "typescript": "^4.2.0"
   },
   "scripts": {
     "build": "node ./scripts/build.js",
     "release": "node ./scripts/release.js",
     "test": "jest"
-  }
+  },
+  "workspaces": [
+    "packages/tsapi",
+    "packages/ts-transform-define",
+    "packages/ts-transform-module-specifier",
+    "packages/ts-transform-pure-class"
+  ]
 }

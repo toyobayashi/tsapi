@@ -13,3 +13,4 @@ async function build (p) {
 await build('tsapi')
 await build('ts-transform-pure-class')
 await build('ts-transform-define')
+await build('ts-transform-module-specifier')
