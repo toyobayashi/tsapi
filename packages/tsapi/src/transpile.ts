@@ -30,7 +30,10 @@ function transpileFile (
   commonDir: string,
   parsedCommandLine: ts.ParsedCommandLine,
   options: TransformOptions = {}
-) {
+): {
+  diagnostics: ts.Diagnostic[]
+  emittedFiles: string[]
+} {
   const {
     ignoreErrorCodes = [],
     outputSuffix
@@ -43,23 +46,36 @@ function transpileFile (
     transformers
   })
 
-  const outputFile = getOutputFile(fileName, outDir, commonDir, parsedCommandLine, outputSuffix)
-
-  mkdirSync(dirname(outputFile), { recursive: true })
-  writeFileSync(outputFile, transpileOutput.outputText, 'utf8')
-
-  if (parsedCommandLine.options.sourceMap && transpileOutput.sourceMapText) {
-    const sourceMapFile = outputFile + '.map'
-    writeFileSync(sourceMapFile, transpileOutput.sourceMapText, 'utf8')
+  const emittedFiles: string[] = []
+  if (!parsedCommandLine.options.noEmit) {
+    const outputFile = getOutputFile(fileName, outDir, commonDir, parsedCommandLine, outputSuffix)
+  
+    mkdirSync(dirname(outputFile), { recursive: true })
+    writeFileSync(outputFile, transpileOutput.outputText, 'utf8')
+    emittedFiles.push(outputFile)
+  
+    if (parsedCommandLine.options.sourceMap && transpileOutput.sourceMapText) {
+      const sourceMapFile = outputFile + '.map'
+      writeFileSync(sourceMapFile, transpileOutput.sourceMapText, 'utf8')
+      emittedFiles.push(sourceMapFile)
+    }
   }
 
+  let diagnostics: ts.Diagnostic[]
   if (transpileOutput.diagnostics) {
-    const diagnostics = transpileOutput.diagnostics.filter(d => !ignoreErrorCodes.includes(d.code))
+    diagnostics = transpileOutput.diagnostics.filter(d => !ignoreErrorCodes.includes(d.code))
     reportDiagnostics(diagnostics)
+  } else {
+    diagnostics = []
+  }
+
+  return {
+    diagnostics,
+    emittedFiles
   }
 }
 
-export function transpile (tsconfig: string, parsedCommandLine: ts.ParsedCommandLine, options: TransformOptions = {}): void {
+export function transpile (tsconfig: string, parsedCommandLine: ts.ParsedCommandLine, options: TransformOptions = {}): ts.EmitResult {
   const {
     customTransformersBefore,
     customTransformersAfter,
@@ -67,7 +83,13 @@ export function transpile (tsconfig: string, parsedCommandLine: ts.ParsedCommand
 
   const fileNames = parsedCommandLine.fileNames.filter(f => !f.endsWith('.d.ts'))
   let commonDir = ''
-  if (fileNames.length === 0) return
+  if (fileNames.length === 0) {
+    return {
+      emitSkipped: true,
+      diagnostics: [],
+      emittedFiles: []
+    }
+  }
   if (fileNames.length === 1) {
     commonDir = dirname(fileNames[0])
   } else {
@@ -89,8 +111,17 @@ export function transpile (tsconfig: string, parsedCommandLine: ts.ParsedCommand
   })
 
   let fileName = ''
+  let allDiagnostics: ts.Diagnostic[] = []
+  let allEmittedFiles: string[] = []
   for (let i = 0; i < fileNames.length; ++i) {
     fileName = fileNames[i]
-    transpileFile(fileName, transformers, outDir, commonDir, parsedCommandLine, options)
+    const result = transpileFile(fileName, transformers, outDir, commonDir, parsedCommandLine, options)
+    allDiagnostics = [...allDiagnostics, ...result.diagnostics]
+    allEmittedFiles = [...allEmittedFiles, ...result.emittedFiles]
+  }
+  return {
+    emitSkipped: !!parsedCommandLine.options.noEmit,
+    diagnostics: allDiagnostics,
+    emittedFiles: allEmittedFiles
   }
 }

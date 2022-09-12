@@ -15,10 +15,16 @@ import { transpile } from './transpile'
 
 export type { TransformOptions, TypeCheckOptions, WatchTransformOptions }
 
+export interface CompileResult {
+  result: boolean
+  emitResult: ts.EmitResult
+  diagnostics: readonly ts.Diagnostic[]
+}
+
 export function compile (
   tsconfig: string,
   options: TransformOptions = {}
-): boolean {
+): CompileResult {
   const {
     transpileOnly = false,
     ignoreErrorCodes = [],
@@ -28,10 +34,14 @@ export function compile (
     customTransformersAfter,
   } = options
   const parsedCommandLine = parseTsConfigToCommandLine(tsconfig, optionsToExtend)
-
+  let emitResult: ts.EmitResult
   if (transpileOnly) {
-    transpile(tsconfig, parsedCommandLine, options)
-    return true
+    emitResult = transpile(tsconfig, parsedCommandLine, options)
+    return {
+      result: true,
+      emitResult,
+      diagnostics: emitResult.diagnostics
+    }
   }
 
   const compilerHost = ts.createCompilerHost(parsedCommandLine.options)
@@ -48,7 +58,7 @@ export function compile (
   const transformers = withTransformerOption(program, { customTransformersBefore, customTransformersAfter }, (transformers) => {
     getTransformers(transformers, tsconfig, parsedCommandLine.options, program)
   })
-  const emitResult = program.emit(undefined, undefined, undefined, !!parsedCommandLine.options.emitDeclarationOnly, transformers)
+  emitResult = program.emit(undefined, undefined, undefined, !!parsedCommandLine.options.emitDeclarationOnly, transformers)
 
   const allDiagnostics = ts
     .getPreEmitDiagnostics(program)
@@ -57,7 +67,11 @@ export function compile (
   const diagnostics = allDiagnostics.filter(d => !ignoreErrorCodes.includes(d.code))
   reportDiagnostics(diagnostics)
 
-  return !(emitResult.emitSkipped && !parsedCommandLine.options.noEmit)
+  return {
+    result: !(emitResult.emitSkipped && !parsedCommandLine.options.noEmit),
+    emitResult,
+    diagnostics
+  }
 }
 
 export function watch (
@@ -127,7 +141,7 @@ export function watch (
 export function typeCheck (
   tsconfig: string,
   options: TypeCheckOptions = {}
-): boolean {
+): CompileResult {
   const { transpileOnly, ...opts } = options as any
   opts.optionsToExtend = opts.optionsToExtend || {}
   opts.optionsToExtend.noEmit = true
