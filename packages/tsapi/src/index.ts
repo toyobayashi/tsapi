@@ -10,13 +10,15 @@ import {
   withTransformerOption
 } from './util'
 
-import type { TransformOptions } from './types'
+import type { TransformOptions, TypeCheckOptions, WatchTransformOptions } from './types'
 import { transpile } from './transpile'
+
+export type { TransformOptions, TypeCheckOptions, WatchTransformOptions }
 
 export function compile (
   tsconfig: string,
   options: TransformOptions = {}
-): void {
+): boolean {
   const {
     transpileOnly = false,
     ignoreErrorCodes = [],
@@ -29,7 +31,7 @@ export function compile (
 
   if (transpileOnly) {
     transpile(tsconfig, parsedCommandLine, options)
-    return
+    return true
   }
 
   const compilerHost = ts.createCompilerHost(parsedCommandLine.options)
@@ -55,9 +57,7 @@ export function compile (
   const diagnostics = allDiagnostics.filter(d => !ignoreErrorCodes.includes(d.code))
   reportDiagnostics(diagnostics)
 
-  if (emitResult.emitSkipped && !parsedCommandLine.options.noEmit) {
-    throw new Error('TypeScript compile failed.')
-  }
+  return !(emitResult.emitSkipped && !parsedCommandLine.options.noEmit)
 }
 
 export function watch (
@@ -68,7 +68,7 @@ export function watch (
     outputSuffix,
     customTransformersBefore,
     customTransformersAfter
-  }: TransformOptions = {}
+  }: WatchTransformOptions = {}
 ): ts.WatchOfConfigFile<ts.SemanticDiagnosticsBuilderProgram> {
   const configPath = ts.findConfigFile(
     dirname(tsconfig),
@@ -122,4 +122,14 @@ export function watch (
   }
 
   return ts.createWatchProgram(host)
+}
+
+export function typeCheck (
+  tsconfig: string,
+  options: TypeCheckOptions = {}
+): boolean {
+  const { transpileOnly, ...opts } = options as any
+  opts.optionsToExtend = opts.optionsToExtend || {}
+  opts.optionsToExtend.noEmit = true
+  return compile(tsconfig, opts)
 }

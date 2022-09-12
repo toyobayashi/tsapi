@@ -4,11 +4,18 @@ import type {
   CompilerOptions
 } from 'typescript'
 
-export interface TransformOptions {
-  transpileOnly?: boolean
+export interface TypeCheckOptions {
   ignoreErrorCodes?: number[]
   optionsToExtend?: CompilerOptions
-  outputSuffix?: string
   customTransformersBefore?: (program: Program) => CustomTransformers
   customTransformersAfter?: (program: Program) => CustomTransformers
+}
+
+export interface TransformOptions extends TypeCheckOptions {
+  transpileOnly?: boolean
+  outputSuffix?: string
+}
+
+export interface WatchTransformOptions extends TypeCheckOptions {
+  outputSuffix?: string
 }
