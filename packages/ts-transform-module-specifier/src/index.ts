@@ -8,6 +8,8 @@ import type {
 
 import * as ts from 'typescript'
 
+const ts5 = Number(ts.version.charAt(0)) >= 5
+
 function replaceModuleSpecifier (
   node: StringLiteral,
   factory: NodeFactory,
@@ -70,8 +72,15 @@ function defineTransformer (config: Options): TransformerFactory<SourceFile> {
 
     const visitor: Visitor = (node) => {
       if (ts.isImportDeclaration(node)) {
-        return factory.createImportDeclaration(
-          node.decorators,
+        if (ts5) {
+          return factory.createImportDeclaration(
+            node.modifiers,
+            node.importClause,
+            replaceModuleSpecifier(node.moduleSpecifier as StringLiteral, factory, config, currentSourceFile)
+          )
+        }
+        return (factory as any).createImportDeclaration(
+          (node as any).decorators,
           node.modifiers,
           node.importClause,
           replaceModuleSpecifier(node.moduleSpecifier as StringLiteral, factory, config, currentSourceFile)
@@ -79,8 +88,16 @@ function defineTransformer (config: Options): TransformerFactory<SourceFile> {
       }
 
       if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
-        return factory.createImportEqualsDeclaration(
-          node.decorators,
+        if (ts5) {
+          return factory.createImportEqualsDeclaration(
+            node.modifiers,
+            node.isTypeOnly,
+            node.name,
+            factory.createExternalModuleReference(replaceModuleSpecifier(node.moduleReference.expression as StringLiteral, factory, config, currentSourceFile))
+          )
+        }
+        return (factory as any).createImportEqualsDeclaration(
+          (node as any).decorators,
           node.modifiers,
           node.isTypeOnly,
           node.name,
@@ -89,8 +106,16 @@ function defineTransformer (config: Options): TransformerFactory<SourceFile> {
       }
 
       if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-        return factory.createExportDeclaration(
-          node.decorators,
+        if (ts5) {
+          return factory.createExportDeclaration(
+            node.modifiers,
+            node.isTypeOnly,
+            node.exportClause,
+            replaceModuleSpecifier(node.moduleSpecifier, factory, config, currentSourceFile)
+          )
+        }
+        return (factory as any).createExportDeclaration(
+          (node as any).decorators,
           node.modifiers,
           node.isTypeOnly,
           node.exportClause,
@@ -112,7 +137,16 @@ function defineTransformer (config: Options): TransformerFactory<SourceFile> {
       }
 
       if (ts.isImportTypeNode(node)) {
-        return factory.createImportTypeNode(
+        if (ts5) {
+          return factory.createImportTypeNode(
+            factory.createLiteralTypeNode(replaceModuleSpecifier((node.argument as any).literal, factory, config, currentSourceFile)),
+            node.assertions,
+            node.qualifier,
+            node.typeArguments,
+            node.isTypeOf
+          )
+        }
+        return (factory as any).createImportTypeNode(
           factory.createLiteralTypeNode(replaceModuleSpecifier((node.argument as any).literal, factory, config, currentSourceFile)),
           node.qualifier,
           node.typeArguments,

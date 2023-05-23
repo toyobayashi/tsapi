@@ -304,7 +304,7 @@ function defineTransformer (program: Program, config: DefineOptions): Transforme
           node.name,
           node.exclamationToken,
           node.type,
-          ts.visitNode(node.initializer, visitor)
+          ts.visitNode(node.initializer, visitor) as Expression | undefined
         )
       }
       // left = right
@@ -312,13 +312,13 @@ function defineTransformer (program: Program, config: DefineOptions): Transforme
         return factory.createBinaryExpression(
           node.left,
           ts.SyntaxKind.EqualsToken,
-          ts.visitNode(node.right, visitor)
+          ts.visitNode(node.right, visitor) as Expression
         )
       }
 
       // { name: initializer, name: initializer }
       if (ts.isPropertyAssignment(node)) {
-        return factory.createPropertyAssignment(node.name, ts.visitNode(node.initializer, visitor))
+        return factory.createPropertyAssignment(node.name, ts.visitNode(node.initializer, visitor) as Expression)
       }
 
       // expression(...arguments)
@@ -332,10 +332,10 @@ function defineTransformer (program: Program, config: DefineOptions): Transforme
                   ? toExpression(check.value, factory, true)!
                   : (check.stop ? node.expression : undefined)
               )
-            ) ?? ts.visitNode(node.expression, visitor),
+            ) ?? ts.visitNode(node.expression, visitor) as Expression,
             node.questionDotToken,
             node.typeArguments,
-            node.arguments.map(e => ts.visitNode(e, visitor))
+            node.arguments.map(e => ts.visitNode(e, visitor)) as Expression[]
           )
         }
         return factory.createCallExpression(
@@ -346,9 +346,9 @@ function defineTransformer (program: Program, config: DefineOptions): Transforme
                 ? toExpression(check.value, factory, true)!
                 : (check.stop ? node.expression : undefined)
             )
-          ) ?? ts.visitNode(node.expression, visitor),
+          ) ?? ts.visitNode(node.expression, visitor) as Expression,
           node.typeArguments,
-          node.arguments.map(e => ts.visitNode(e, visitor))
+          node.arguments.map(e => ts.visitNode(e, visitor)) as Expression[]
         )
       }
 
